@@ -7,8 +7,8 @@ app.use(express.json());
 app.use(cors());
 
 const iyzipay = new Iyzipay({
-    apiKey: process.env.IYZICO_API_KEY,WDAOSN8QAcnhXv8AB4U2LCgs4bHreWF4
-    secretKey: process.env.IYZICO_SECRET_KEY,kCon8WH5MfjngXaaZHiNdD0xNKyiMMyU
+    apiKey: process.env.IYZICO_API_KEY,
+    secretKey: process.env.IYZICO_SECRET_KEY,
     uri: 'https://api.iyzipay.com'
 });
 
