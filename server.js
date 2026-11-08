@@ -13,11 +13,14 @@ const iyzipay = new Iyzipay({
 });
 
 app.post('/create-payment-form', (req, res) => {
+    // Siteden gelen dinamik fiyat, adet ve müşteri bilgilerini alıyoruz
+    const { name, email, gsmNumber, address, price, quantity } = req.body;
+
     const request = {
         locale: Iyzipay.LOCALE.TR,
         conversationId: '123456789',
-        price: '299.00',
-        paidPrice: '299.00',
+        price: price,           // <-- Siteden seçilen fiyat (350 veya 600)
+        paidPrice: price,       // <-- Ödenecek net tutar
         currency: Iyzipay.CURRENCY.TL,
         basketId: 'B67832',
         paymentGroup: Iyzipay.PAYMENT_GROUP.PRODUCT,
@@ -25,43 +28,44 @@ app.post('/create-payment-form', (req, res) => {
         enabledInstallments: [1, 2, 3, 6, 9],
         buyer: {
             id: 'BY789',
-            name: 'Musteri',
-            surname: 'Musteri',
-            gsmNumber: '+905300000000',
-            email: 'musteri@email.com',
+            name: name || 'Müşteri',
+            surname: 'Şoför',
+            gsmNumber: gsmNumber || '+905300000000',
+            email: email || 'musteri@email.com',
             identityNumber: '11111111111',
-            registrationAddress: 'Turkiye',
-            ip: req.ip || '85.105.0.1',
-            city: 'Istanbul',
+            registrationAddress: address || 'Türkiye',
+            ip: req.headers['x-forwarded-for'] || req.connection.remoteAddress || '85.105.0.1',
+            city: 'Izmir',
             country: 'Turkey'
         },
         shippingAddress: {
-            contactName: 'Musteri',
-            city: 'Istanbul',
+            contactName: name || 'Müşteri',
+            city: 'Izmir',
             country: 'Turkey',
-            address: 'Teslimat Adresi',
-            zipCode: '34000'
+            address: address || 'Teslimat Adresi',
+            zipCode: '35000'
         },
         billingAddress: {
-            contactName: 'Musteri',
-            city: 'Istanbul',
+            contactName: name || 'Müşteri',
+            city: 'Izmir',
             country: 'Turkey',
-            address: 'Fatura Adresi',
-            zipCode: '34000'
+            address: address || 'Fatura Adresi',
+            zipCode: '35000'
         },
         basketItems: [
             {
                 id: 'BI101',
-                name: 'Vakumlu Telefon Tutucu',
+                name: `Katlanabilir Vakumlu Telefon Tutucu (${quantity || 1} Adet)`,
                 category1: 'Aksesuar',
                 itemType: Iyzipay.BASKET_ITEM_TYPE.PHYSICAL,
-                price: '299.00'
+                price: price     // <-- Sepetteki ürün fiyatı da dinamik gidiyor
             }
         ]
     };
 
     iyzipay.checkoutFormInitialize.create(request, (err, result) => {
         if (err) {
+            console.error(err);
             res.status(500).json(err);
         } else {
             res.json(result);
