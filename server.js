@@ -1,4 +1,3 @@
-
 const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
@@ -9,7 +8,7 @@ app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
-// iyzico Bağlantı Ayarları (Canlı Anahtarların Sabit)
+// iyzico Bağlantı Ayarları (Canlı Anahtarların)
 const iyzipay = new Iyzipay({
     apiKey: 'WDAOSN8QAcnhXv8AB4U2LCgs4bHreWF4',
     secretKey: 'kCon8WH5MfjngXaaZHiNdD0xNKyiMMyU',
@@ -21,56 +20,61 @@ app.get('/', (req, res) => {
     res.send('Diesel Captan API ve İyzico Ödeme Sistemi Aktif Baskan!');
 });
 
-// 1. ÖDEMEYİ BAŞLATAN ROTA
-app.post('/initialize', (req, res) => {
-    const { price, basketId, buyer, shippingAddress, billingAddress, basketItems } = req.body;
+// Sitenin istek attığı rota ile uyumlu hale getirildi (/create-payment-form)
+app.post('/create-payment-form', (req, res) => {
+    const { name, email, gsmNumber, address, price, quantity } = req.body;
+
+    // Ad soyad parçalama (iyzico name ve surname ayrı ister)
+    const nameParts = (name || 'Test Kullanici').trim().split(' ');
+    const surname = nameParts.length > 1 ? nameParts.pop() : 'Kullanici';
+    const firstName = nameParts.join(' ') || 'Test';
 
     const request = {
         locale: Iyzipay.LOCALE.TR,
         conversationId: '123456789',
-        price: price || '299.99', // Ürünün gerçek fiyatı neyse o
-        paidPrice: price || '299.99',
+        price: price || '350.00',
+        paidPrice: price || '350.00',
         currency: Iyzipay.CURRENCY.TRY,
-        basketId: basketId || 'B67832',
+        basketId: 'B67832',
         paymentGroup: Iyzipay.PAYMENT_GROUP.PRODUCT,
         callbackUrl: 'https://dieselcaptan-apia.onrender.com/payment-result',
         enabledInstallments: [1, 2, 3, 6, 9],
-        buyer: buyer || {
+        buyer: {
             id: 'BY789',
-            name: 'Test',
-            surname: 'Kullanici',
-            gsmNumber: '+905350000000',
-            email: 'test@email.com',
+            name: firstName,
+            surname: surname,
+            gsmNumber: gsmNumber || '+905350000000',
+            email: email || 'test@email.com',
             identityNumber: '74300864791',
             lastLoginDate: '2026-11-10 12:00:00',
             registrationDate: '2026-05-01 12:00:00',
-            registrationAddress: 'Istanbul',
+            registrationAddress: address || 'Istanbul',
             ip: req.ip || '85.104.34.1',
             city: 'Istanbul',
             country: 'Turkey',
             zipCode: '34732'
         },
-        shippingAddress: shippingAddress || {
-            contactName: 'Test Kullanici',
+        shippingAddress: {
+            contactName: name || 'Test Kullanici',
             city: 'Istanbul',
             country: 'Turkey',
-            address: 'Merkez Mah. Sokak No:1',
+            address: address || 'Merkez Mah. Sokak No:1',
             zipCode: '34732'
         },
-        billingAddress: billingAddress || {
-            contactName: 'Test Kullanici',
+        billingAddress: {
+            contactName: name || 'Test Kullanici',
             city: 'Istanbul',
             country: 'Turkey',
-            address: 'Merkez Mah. Sokak No:1',
+            address: address || 'Merkez Mah. Sokak No:1',
             zipCode: '34732'
         },
-        basketItems: basketItems || [
+        basketItems: [
             {
                 id: 'BI101',
-                name: 'Vakumlu Telefon Tutucu',
+                name: `Katlanabilir Vakumlu Telefon Tutucu (${quantity || 1} Adet)`,
                 category1: 'Oto Aksesuar',
                 itemType: Iyzipay.BASKET_ITEM_TYPE.PHYSICAL,
-                price: price || '299.99'
+                price: price || '350.00'
             }
         ]
     };
@@ -84,7 +88,7 @@ app.post('/initialize', (req, res) => {
     });
 });
 
-// 2. ÖDEME SONUCU / CALLBACK ROTA
+// Ödeme Sonucu / Callback Rota
 app.post('/payment-result', (req, res) => {
     try {
         const paymentData = req.body;
