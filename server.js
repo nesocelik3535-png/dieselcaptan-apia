@@ -20,11 +20,11 @@ app.get('/', (req, res) => {
     res.send('Diesel Captan API ve İyzico Ödeme Sistemi Aktif Baskan!');
 });
 
-// Sitenin istek attığı rota ile uyumlu hale getirildi (/create-payment-form)
+// 1. Ödemeyi Başlatan Rota
 app.post('/create-payment-form', (req, res) => {
     const { name, email, gsmNumber, address, price, quantity } = req.body;
 
-    // Ad soyad parçalama (iyzico name ve surname ayrı ister)
+    // Ad soyad parçalama
     const nameParts = (name || 'Test Kullanici').trim().split(' ');
     const surname = nameParts.length > 1 ? nameParts.pop() : 'Kullanici';
     const firstName = nameParts.join(' ') || 'Test';
@@ -88,11 +88,12 @@ app.post('/create-payment-form', (req, res) => {
     });
 });
 
-// Ödeme Sonucu / Callback Rota
+// 2. Ödeme Sonucu / Callback Rota (Müşteri bilgileri burada yakalanıyor)
 app.post('/payment-result', (req, res) => {
     try {
         const paymentData = req.body;
-        console.log('Yeni Sipariş / İyzico Callback Geldi:', JSON.stringify(paymentData, null, 2));
+        console.log('--- YENİ ÖDEME BİLDİRİMİ GELDİ ---');
+        console.log(JSON.stringify(paymentData, null, 2));
 
         const token = paymentData.token;
         if (token) {
@@ -101,7 +102,19 @@ app.post('/payment-result', (req, res) => {
                     console.error('Retrieve error:', err);
                     return res.status(500).send('Ödeme doğrulama hatası');
                 }
-                console.log('Onaylanan Ödeme Detayı:', result);
+                
+                // İŞTE BURASI HAYATİ: Onaylanan siparişin bütün detaylarını ekrana basıyoruz!
+                console.log('================ MÜŞTERİ VE SİPARİŞ BİLGİLERİ ================');
+                console.log('Ödeme Durumu:', result.paymentStatus);
+                console.log('Ödenen Tutar:', result.paidPrice);
+                console.log('Ad Soyad:', result.buyer ? (result.buyer.name + ' ' + result.buyer.surname) : 'Bulunamadı');
+                console.log('Telefon:', result.buyer ? result.buyer.gsmNumber : 'Bulunamadı');
+                console.log('E-posta:', result.buyer ? result.buyer.email : 'Bulunamadı');
+                console.log('Teslimat Adresi:', result.shippingAddress ? result.shippingAddress.address : 'Bulunamadı');
+                console.log('Şehir:', result.shippingAddress ? result.shippingAddress.city : 'Bulunamadı');
+                console.log('Alınan Ürünler:', JSON.stringify(result.basketItems));
+                console.log('===========================================================');
+
                 res.redirect('https://dieselcaptanshop.com'); 
             });
         } else {
