@@ -8,11 +8,11 @@ app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
-// iyzico Bağlantı Ayarları (Render Environment Variables'dan otomatik çeker)
+// iyzico Bağlantı Ayarları (Anahtarların doğrudan tanımlı)
 const iyzipay = new Iyzipay({
-    apiKey: process.env.IYZI_API_KEY,
-    secretKey: process.env.IYZI_SECRET_KEY,
-    uri: process.env.IYZI_BASE_URL || 'https://api.iyzipay.com'
+    apiKey: 'WDAOSN8QAcnhXv8AB4U2LCgs4bHreWF4',
+    secretKey: 'kCon8WH5MfjngXaaZHiNdD0xNKyiMMyU',
+    uri: 'https://api.iyzipay.com'
 });
 
 // Test Rotası
@@ -20,19 +20,19 @@ app.get('/', (req, res) => {
     res.send('Diesel Captan API ve İyzico Ödeme Sistemi Aktif Baskan!');
 });
 
-// 1. ÖDEMEYİ BAŞLATAN ROTA (Frontend buraya istek atar, iyzico formunu açar)
+// 1. ÖDEMEYİ BAŞLATAN ROTA
 app.post('/initialize', (req, res) => {
     const { price, basketId, buyer, shippingAddress, billingAddress, basketItems } = req.body;
 
     const request = {
         locale: Iyzipay.LOCALE.TR,
         conversationId: '123456789',
-        price: price || '10.00', // Test için şimdilik 10 TL
+        price: price || '10.00',
         paidPrice: price || '10.00',
         currency: Iyzipay.CURRENCY.TRY,
         basketId: basketId || 'B67832',
         paymentGroup: Iyzipay.PAYMENT_GROUP.PRODUCT,
-        callbackUrl: 'https://dieselcaptan-apia.onrender.com/payment-result', // Ödeme bitince iyzico'nun döneceği adres
+        callbackUrl: 'https://dieselcaptan-apia.onrender.com/payment-result',
         enabledInstallments: [1, 2, 3, 6, 9],
         buyer: buyer || {
             id: 'BY789',
@@ -41,8 +41,8 @@ app.post('/initialize', (req, res) => {
             gsmNumber: '+905350000000',
             email: 'test@email.com',
             identityNumber: '74300864791',
-            lastLoginDate: '2025-11-01 12:00:00',
-            registrationDate: '2025-05-01 12:00:00',
+            lastLoginDate: '2026-11-10 12:00:00',
+            registrationDate: '2026-05-01 12:00:00',
             registrationAddress: 'Istanbul',
             ip: req.ip || '85.104.34.1',
             city: 'Istanbul',
@@ -83,7 +83,7 @@ app.post('/initialize', (req, res) => {
     });
 });
 
-// 2. ÖDEME SONUCU / CALLBACK ROTA (İyzico ödeme bitince buraya veri gönderir)
+// 2. ÖDEME SONUCU / CALLBACK ROTA
 app.post('/payment-result', (req, res) => {
     try {
         const paymentData = req.body;
@@ -97,7 +97,6 @@ app.post('/payment-result', (req, res) => {
                     return res.status(500).send('Ödeme doğrulama hatası');
                 }
                 console.log('Onaylanan Ödeme Detayı:', result);
-                // Ödeme başarılıysa müşteriyi kendi sitendeki başarı sayfasına yönlendirebilirsin
                 res.redirect('https://dieselcaptanshop.com'); 
             });
         } else {
