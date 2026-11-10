@@ -1,3 +1,4 @@
+
 const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
@@ -8,7 +9,7 @@ app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
-// iyzico Bağlantı Ayarları (Anahtarların doğrudan tanımlı)
+// iyzico Bağlantı Ayarları (Canlı Anahtarların Sabit)
 const iyzipay = new Iyzipay({
     apiKey: 'WDAOSN8QAcnhXv8AB4U2LCgs4bHreWF4',
     secretKey: 'kCon8WH5MfjngXaaZHiNdD0xNKyiMMyU',
@@ -27,8 +28,8 @@ app.post('/initialize', (req, res) => {
     const request = {
         locale: Iyzipay.LOCALE.TR,
         conversationId: '123456789',
-        price: price || '10.00',
-        paidPrice: price || '10.00',
+        price: price || '299.99', // Ürünün gerçek fiyatı neyse o
+        paidPrice: price || '299.99',
         currency: Iyzipay.CURRENCY.TRY,
         basketId: basketId || 'B67832',
         paymentGroup: Iyzipay.PAYMENT_GROUP.PRODUCT,
@@ -69,7 +70,7 @@ app.post('/initialize', (req, res) => {
                 name: 'Vakumlu Telefon Tutucu',
                 category1: 'Oto Aksesuar',
                 itemType: Iyzipay.BASKET_ITEM_TYPE.PHYSICAL,
-                price: price || '10.00'
+                price: price || '299.99'
             }
         ]
     };
