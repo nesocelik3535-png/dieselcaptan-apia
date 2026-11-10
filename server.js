@@ -1,4 +1,4 @@
-const express = Iyzipay = require('express'); // ya da senin mevcut iyzico/express importların
+const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
 const nodemailer = require('nodemailer');
@@ -20,7 +20,7 @@ const transporter = nodemailer.createTransport({
     tls: {
         rejectUnauthorized: false
     },
-    connectionTimeout: 15000, // Bağlantı zaman aşımı süresi
+    connectionTimeout: 15000,
     socketTimeout: 15000
 });
 
@@ -32,25 +32,34 @@ app.get('/', (req, res) => {
 // İyzico Ödeme Sonucu / Callback Rotası
 app.post('/payment-result', async (req, res) => {
     try {
-        // İyzico'dan gelen veriler (Örnek yapı, senin iyzico callback içeriğine göre şekillenir)
         const paymentData = req.body;
         
-        // Ödeme başarılı mı kontrolü (iyzico durumuna göre 'success' döner)
-        // Burada kendi iyzico doğrulama mantığını çalıştırabilirsin.
+        // Müşteri mail adresini iyzico/istek verisinden yakalıyoruz
+        const customerEmail = paymentData.email || paymentData.buyer?.email;
 
-        // Müşteri ve Sipariş Bilgilerini E-posta ile Gönderme
-        const mailOptions = {
+        // 1. SANA (SATICIYA) GİDECEK BİLDİRİM MAİLİ
+        const sellerMailOptions = {
             from: process.env.EMAIL_USER,
             to: 'dieselcaptan@gmail.com',
             subject: '🚛 Yeni Sipariş Geldi, Baskan!',
             text: `Yeni bir sipariş başarıyla onaylandı ve ödeme alındı!\n\nSipariş Detayları:\n${JSON.stringify(paymentData, null, 2)}`
         };
-
-        // Maili Gönder
-        await transporter.sendMail(mailOptions);
+        await transporter.sendMail(sellerMailOptions);
         console.log('Sipariş maili başarıyla dieselcaptan@gmail.com adresine gönderildi.');
 
-        res.status(200).send({ status: 'success', message: 'Ödeme alındı ve mail atıldı.' });
+        // 2. MÜŞTERİYE GİDECEK ONAY MAİLİ
+        if (customerEmail) {
+            const customerMailOptions = {
+                from: process.env.EMAIL_USER,
+                to: customerEmail,
+                subject: 'Siparişiniz Alındı - Diesel Captan',
+                text: `Merhaba,\n\nSiparişiniz başarıyla alındı ve ödemeniz onaylandı! En kısa sürede kargo hazırlıklarına başlayıp seni bilgilendireceğiz.\n\nBizi tercih ettiğin için teşekkür ederiz baskan!`
+            };
+            await transporter.sendMail(customerMailOptions);
+            console.log(`Müşteriye (${customerEmail}) başarıyla onay maili gönderildi.`);
+        }
+
+        res.status(200).send({ status: 'success', message: 'Ödeme alındı ve mailler atıldı.' });
     } catch (error) {
         console.error('Mail atılırken hata:', error);
         res.status(500).send({ status: 'error', message: error.message });
