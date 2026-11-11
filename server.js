@@ -20,11 +20,11 @@ app.get('/', (req, res) => {
     res.send('Diesel Captan API ve İyzico Ödeme Sistemi Aktif Baskan!');
 });
 
-// 1. Ödemeyi Başlatan Rota
+// 1. Ödemeyi Başlatan Rota (Sitenin beklediği /create-payment-form adresi)
 app.post('/create-payment-form', (req, res) => {
     const { name, email, gsmNumber, address, price, quantity } = req.body;
 
-    // Ad soyad parçalama
+    // Ad soyad parçalama (iyzico name ve surname ayrı ister)
     const nameParts = (name || 'Test Kullanici').trim().split(' ');
     const surname = nameParts.length > 1 ? nameParts.pop() : 'Kullanici';
     const firstName = nameParts.join(' ') || 'Test';
@@ -93,7 +93,6 @@ app.post('/payment-result', (req, res) => {
     try {
         const paymentData = req.body;
         console.log('--- YENİ ÖDEME BİLDİRİMİ GELDİ ---');
-        console.log(JSON.stringify(paymentData, null, 2));
 
         const token = paymentData.token;
         if (token) {
@@ -103,7 +102,7 @@ app.post('/payment-result', (req, res) => {
                     return res.status(500).send('Ödeme doğrulama hatası');
                 }
                 
-                // İŞTE BURASI HAYATİ: Onaylanan siparişin bütün detaylarını ekrana basıyoruz!
+                // Müşteri ve sipariş detaylarını Render loglarına devasa ve net şekilde basıyoruz
                 console.log('================ MÜŞTERİ VE SİPARİŞ BİLGİLERİ ================');
                 console.log('Ödeme Durumu:', result.paymentStatus);
                 console.log('Ödenen Tutar:', result.paidPrice);
