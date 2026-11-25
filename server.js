@@ -5,9 +5,6 @@ const Iyzipay = require('iyzipay');
 const app = express();
 const PORT = process.env.PORT || 10000;
 
-// TEST MODU: Deneme yaparken karttan yüksek tutar çekilmemesi için true bırak
-const TEST_MODE_1_TL = true;
-
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -18,6 +15,7 @@ const iyzipay = new Iyzipay({
     uri: process.env.IYZICO_URI || 'https://api.iyzipay.com'
 });
 
+// Formdan gelen sipariş bilgilerini token ile eşleştirip tutan alan
 const pendingOrders = new Map();
 
 app.get('/', (req, res) => {
@@ -34,9 +32,7 @@ app.post('/create-payment-form', (req, res) => {
         const firstName = nameParts.join(' ') || 'Musteri';
 
         const adet = Number(quantity) > 0 ? Number(quantity) : 1;
-        const unitPrice = TEST_MODE_1_TL
-            ? 1
-            : (Number(price) > 0 ? Number(price) : 350);
+        const unitPrice = Number(price) > 0 ? Number(price) : 350;
         const totalPrice = (unitPrice * adet).toFixed(2);
 
         const request = {
